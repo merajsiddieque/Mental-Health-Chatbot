@@ -24,25 +24,16 @@ services:
         sync: false
 
   # === Frontend (React + Vite) ===
-  - type: web
+  - type: static
     name: chatbot-frontend
-    env: node
-    plan: free
     region: oregon
-    buildCommand: |
-      cd react
-      npm install
-      npm run build
-    startCommand: |
-      cd react
-      npm run dev
+    buildCommand: cd react && npm install && npm run build
+    staticPublishPath: react/dist
     envVars:
       - key: NODE_ENV
         value: production
       - key: VITE_API_URL
-        # 👇 Update this after backend deploy
         value: https://chatbot-backend.onrender.com
-    staticPublishPath: react/dist
 
 # === Metadata ===
 version: "1"
