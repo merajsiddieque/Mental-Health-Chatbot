@@ -1,4 +1,10 @@
 {
+  "name": "mental-health-chatbot",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd react && npm install && npm run build && cd ../backend && npm install",
+    "start": "cd backend && npm start"
+  },
   "dependencies": {
     "@tensorflow-models/handpose": "^0.1.0",
     "@tensorflow/tfjs": "^4.22.0",

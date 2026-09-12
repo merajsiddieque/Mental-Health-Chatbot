@@ -114,12 +114,21 @@ export default function Chatbot() {
     ]);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const apiUrl =
+        import.meta.env.VITE_API_URL ||
+        (import.meta.env.DEV ? "http://localhost:5000" : "");
       const response = await fetch(`${apiUrl}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.details || errorData.error || `Server responded with status ${response.status}`
+        );
+      }
 
       const data = await response.json();
       const botReply =
@@ -153,6 +162,15 @@ export default function Chatbot() {
       }
     } catch (e) {
       console.error("Error sending or saving message:", e);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uuidv4(),
+          sender: "bot",
+          message:
+            "I'm having trouble connecting right now. Please try again in a moment.",
+        },
+      ]);
     }
   };
 
