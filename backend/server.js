@@ -35,7 +35,7 @@ if (openai) {
 
 // ✅ Health Check
 app.get("/api", (req, res) => {
-  res.send("🧠 Sahaara AI API is running successfully!");
+  res.send("🧠 Mental Health Chatbot API is running successfully!");
 });
 
 // ✅ Chat Endpoint
@@ -61,7 +61,7 @@ app.post("/chat", async (req, res) => {
         {
           role: "system",
           content: `
-You are a mental health support chatbot named "Sahaara AI".
+You are a kind, empathetic mental health support chatbot.
 Your tone is empathetic, calm, and supportive.
 Respond in short, simple sentences (1–3 lines max).
 Use kind and understanding words.
