@@ -67,12 +67,9 @@ export default function Chatbot() {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
 
-  // Dark mode state
+  // Dark mode state - defaults to light mode unless explicitly enabled
   const [darkMode, setDarkMode] = useState(() => {
-    return (
-      localStorage.getItem("mindmate_dark_mode") === "true" ||
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
+    return localStorage.getItem("mindmate_dark_mode") === "true";
   });
 
   // Active Modals
