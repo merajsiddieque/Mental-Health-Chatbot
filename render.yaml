@@ -19,8 +19,8 @@ services:
         value: production
       - key: PORT
         value: 5000
-      # OpenAI API Key configured via Render Dashboard Environment Variables
-      - key: OPENAI_API_KEY
+      # Google Gemini API Key configured via Render Dashboard Environment Variables
+      - key: GOOGLE_API_KEY
         sync: false
 
   # === Frontend (React + Vite) ===

@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,27 +16,62 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Helper to get OpenAI client
-const getOpenAIClient = () => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey === "your_openai_api_key_here") {
+// ✅ Helper to get Google Gemini API key
+const getGoogleApiKey = () => {
+  const rawKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+  const key = rawKey.trim().replace(/^["']|["']$/g, "").trim();
+  if (!key || key === "your_google_api_key_here") {
     return null;
   }
-  return new OpenAI({ apiKey });
+  return key;
 };
 
-let openai = getOpenAIClient();
-if (openai) {
-  console.log("✅ OpenAI initialized using environment variable");
+// System prompt for empathetic mental health responses
+const SYSTEM_INSTRUCTION = `You are a kind, empathetic mental health support chatbot.
+Your tone is empathetic, calm, and supportive.
+Respond in short, simple sentences (1–3 lines max).
+Use kind and understanding words.
+If the user sounds sad or anxious, comfort them gently.
+Avoid robotic or formal tone.`;
+
+const googleApiKey = getGoogleApiKey();
+if (googleApiKey) {
+  console.log("✅ Google Gemini AI initialized using environment variable");
 } else {
-  console.warn("⚠️ OPENAI_API_KEY not found in environment or .env file!");
-  console.warn("   Add OPENAI_API_KEY to your .env file or Render Dashboard -> Environment Variables.");
+  console.warn("⚠️ GOOGLE_API_KEY / GEMINI_API_KEY not found in environment or .env file!");
+  console.warn("   Add GOOGLE_API_KEY to your .env file or Render Dashboard -> Environment Variables.");
 }
 
 // ✅ Health Check
 app.get("/api", (req, res) => {
   res.send("🧠 Mental Health Chatbot API is running successfully!");
 });
+
+// Helper to generate response with model fallback
+async function generateGeminiReply(genAI, message) {
+  const models = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+  let lastError = null;
+
+  for (const modelName of models) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: SYSTEM_INSTRUCTION,
+      });
+
+      const result = await model.generateContent(message);
+      const text = result?.response?.text();
+      if (text) {
+        return text.trim();
+      }
+    } catch (err) {
+      lastError = err;
+      console.warn(`⚠️ Model ${modelName} failed (${err.message}), trying next...`);
+    }
+  }
+
+  throw lastError || new Error("Failed to generate response from Google AI");
+}
 
 // ✅ Chat Endpoint
 app.post("/chat", async (req, res) => {
@@ -47,38 +82,20 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const client = getOpenAIClient();
-    if (!client) {
+    const apiKey = getGoogleApiKey();
+    if (!apiKey) {
       return res.status(500).json({
-        error: "OPENAI_API_KEY is not configured.",
-        details: "Please set OPENAI_API_KEY in your .env file or Render Dashboard environment variables.",
+        error: "GOOGLE_API_KEY is not configured.",
+        details: "Please set GOOGLE_API_KEY in your .env file or Render Dashboard environment variables.",
       });
     }
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `
-You are a kind, empathetic mental health support chatbot.
-Your tone is empathetic, calm, and supportive.
-Respond in short, simple sentences (1–3 lines max).
-Use kind and understanding words.
-If the user sounds sad or anxious, comfort them gently.
-Avoid robotic or formal tone.`,
-        },
-        { role: "user", content: message },
-      ],
-      max_tokens: 120,
-      temperature: 0.7,
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const reply = await generateGeminiReply(genAI, message);
+
+    res.json({
+      reply: reply || "I'm here for you. Can you tell me more about what’s going on?",
     });
-
-    const reply =
-      response.choices?.[0]?.message?.content?.trim() ||
-      "I'm here for you. Can you tell me more about what’s going on?";
-
-    res.json({ reply });
   } catch (error) {
     console.error("❌ Chat API Error:", error.message);
     res.status(500).json({
