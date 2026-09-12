@@ -1,256 +1,193 @@
-# 🧠 Mental Health Chatbot
+# 🤟 AI Sign Language Chatbot
 
-This project is a **Mental Health Support Chatbot** built using **React, Firebase, Express, OpenAI API, and MediaPipe**. It provides **empathetic conversations** and also supports **Sign Language input using real‑time hand gesture recognition**.
+A full‑stack AI chatbot that supports **real‑time sign‑language communication** and **text chat**, built using **React, Tailwind CSS, Mediapipe, Firebase, Express, and OpenAI**.
 
-The chatbot helps users communicate their feelings through:
-
-- 💬 Text chat
-- ✋ Sign language gestures (MediaPipe)
-
-This makes the chatbot more **accessible, inclusive, and interactive**.
+Provides emotional support, natural conversation, and gesture‑based interactions.
 
 ---
 
-# 🚀 GitHub Repository
-
-https://github.com/merajsiddieque/Chatbot
-
----
-
-# ✨ Features
-
-## 🤖 AI Mental Health Chatbot
-
-- Mental health support conversations
-- Uses OpenAI API (GPT model) for generating intelligent replies
-- Empathetic and human‑like replies
-- Real‑time chat
+## 🔗 Project Info
+- **GitHub:** https://github.com/merajsiddieque/Chatbot
+- **Author:** Meraj Siddique
+- **LinkedIn:** https://www.linkedin.com/in/merajsiddieque
 
 ---
 
-## ✋ Sign Language Support (MediaPipe)
+## 🚀 Features
 
-- Real‑time hand gesture detection using webcam
-- Built using **MediaPipe Gesture Recognizer**
-- Converts gestures into meaningful messages
-- Sends gesture meaning to chatbot backend
-- Bot replies based on interpreted gesture
+### ✋ Real‑Time Sign Language Detection
+- Powered by **Mediapipe GestureRecognizer** + webcam.
+- Converts gestures → interpreted text → AI reply.
 
-### Supported Gestures
+### 💬 AI Chat (OpenAI)
+- Handles gesture inputs + normal text.
+- Generates empathetic responses.
 
-- Palm → Greeting
-- Fist → Feeling stressed
-- Thumb Up → Feeling okay
-- Thumb Down → Feeling sad
-- Victory → Feeling peaceful
-- Pointing Up → Asking question
-- I Love You → Appreciation
-- Open Pinch → Minor concern
-- Closed Pinch → Important message
+### 🔐 Firebase Authentication
+- Signup (Email + Password)
+- Email verification (mandatory)
+- Login / Logout
+- Password reset
+- Delete account
+- Profile storage in Firestore
 
----
-
-## 🔐 Authentication
-
-- Firebase Authentication
-- Email and password login
-- Secure user management
-
----
-
-## 👤 Profile Management
-
-- Update username
-- Upload profile image
-- Stored in Firebase Firestore
-
----
-
-## ☁️ Backend API
-
-- Express.js backend
-- OpenAI API integration
-
-Endpoint:
-
+### 🔥 Firestore Database
+Stores:
+- name
+- email
+- base64 profile image
+- entire chat history:
 ```
-POST /chat
+Chats/
+ └── userEmail/
+      └── chatList/
+           └── messages/
 ```
 
 ---
 
-# 🛠️ Tech Stack
+## ✋ Gesture → Intent Mapping
+```js
+const gestureToIntent = {
+  Palm: "Hello! I’m here to communicate through sign language. (👋)",
+  Fist: "I’m feeling tense or stressed right now. (✊)",
+  Thumb_Up: "Yes, I agree or I’m feeling okay. (👍)",
+  Thumb_Down: "No, I don’t agree or I feel sad. (👎)",
+  Victory: "I’m feeling peaceful or I’ve achieved something. (✌️)",
+  Pointing_Up: "I have a question or I want to say something. (☝️)",
+  ILoveYou: "I appreciate your help and care. (🤟)",
+  Open_Pinch: "Something small is bothering me. (🤏)",
+  Closed_Pinch: "I want to share something important. (🤏)",
+  None: "No gesture detected. (⚪)",
+};
+```
 
-## Frontend
-
-- React JS
-- Tailwind CSS
-- MediaPipe
-- React Webcam
-
-## Backend
-
-- Node.js
-- Express.js
-- OpenAI API
-
-## Database
-
-- Firebase Firestore
-
-## Authentication
-
-- Firebase Auth
-
-## AI & Vision
-
-- OpenAI GPT (via OpenAI API key)
-- MediaPipe Gesture Recognizer
+**Flow:** Gesture → Intent → Backend → OpenAI → AI Reply
 
 ---
 
-# 📂 Project Structure
-
+## 📁 Project Structure
 ```
-Chatbot
+Chatbot/
 │
-├── backend
-│   └── server.js
+├── react/
+│   └── src/
+│       ├── components/
+│       │   ├── Chatbot.jsx
+│       │   ├── ChatbotReply.jsx
+│       │   └── UserReply.jsx
+│       │
+│       ├── SignLanguage/
+│       │   ├── SignInput.jsx
+│       │   └── ChatbotSignMode.jsx
+│       │
+│       ├── pages/
+│       │   ├── Auth.jsx
+│       │   ├── Reset-Password.jsx
+│       │   └── Profile.jsx
+│       │
+│       ├── firebase.js
+│       ├── App.jsx
+│       └── index.js
 │
-├── react
-│   ├── src
-│   │   ├── components
-│   │   │     SignInput.jsx
-│   │   │     ChatbotSignMode.jsx
-│   │   │
-│   │   ├── pages
-│   │   ├── firebase.js
-│   │
-│   └── dist
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   └── .env
 │
 └── README.md
 ```
 
 ---
 
-# ⚙️ Installation
-
-## 1. Clone Repository
-
-```bash
-git clone https://github.com/merajsiddieque/Chatbot.git
+## 🔐 Firebase Authentication Logic
+### Email verification check
+```js
+if (!auth.currentUser.emailVerified) {
+  alert("Please verify your email before logging in.");
+  return;
+}
 ```
 
-## 2. Open Folder
+### Profile Storage Example
+```
+Profile/
+ └── userEmail/
+      ├── name: "User Name"
+      ├── email: "user@gmail.com"
+      └── image: "<base64_string>"
+```
 
-```bash
+### Firebase Config (react/src/firebase.js)
+```js
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER",
+  appId: "YOUR_APP_ID",
+};
+```
+
+---
+
+## 🔌 Backend (Express + OpenAI)
+```js
+app.post("/chat", async (req, res) => {
+  const { message } = req.body;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: message }],
+  });
+
+  res.json({ reply: completion.choices[0].message.content });
+});
+```
+
+---
+
+## 🧰 Installation
+### 1️⃣ Clone
+```
+git clone https://github.com/merajsiddieque/Chatbot
 cd Chatbot
 ```
 
----
-
-## 3. Install Backend
-
-```bash
-npm install
+### 2️⃣ Frontend
 ```
-
----
-
-## 4. Install Frontend
-
-```bash
 cd react
 npm install
+npm start
 ```
 
----
-
-# 🔑 Environment Variables
-
-Create `.env` file:
-
+### 3️⃣ Backend
 ```
-OPENAI_API_KEY=your_openai_api_key
-```
-
-This API key is used to connect with the **OpenAI API** to generate chatbot responses.
-
-⚠️ Never expose your API key publicly.
-
----
-
-# ▶️ Run Project
-
-## Run Backend
-
-```bash
+cd backend
+npm install
 node server.js
 ```
 
-## Run Frontend
-
-```bash
-npm run dev
+### Environment Variables (`backend/.env`)
+```
+OPENAI_API_KEY=your_openai_key
+PORT=5000
 ```
 
 ---
 
-# 🔌 API
-
-## POST /chat
-
-Request:
-
-```json
-{
-  "message": "I feel stressed"
-}
-```
-
-Response:
-
-```json
-{
-  "reply": "I'm here for you. Tell me what's bothering you."
-}
-```
+## 🎯 Future Enhancements
+- More gesture support
+- Gesture → sentence detection
+- Voice + sign + text modes
+- Deploy frontend (Vercel) + backend (Render)
+- Google Sign‑In
+- Dark mode
 
 ---
 
-# 🌟 Key Highlights
-
-✅ Mental health support chatbot  
-✅ Sign language support using MediaPipe  
-✅ Real‑time gesture recognition  
-✅ OpenAI integration  
-✅ Firebase authentication  
-✅ Full‑stack project  
-
----
-
-# 🎯 Purpose
-
-This project was built to learn:
-
-- AI chatbot development
-- OpenAI API
-- Computer Vision using MediaPipe
-- Full‑stack development
-- Accessibility in AI systems
-
----
-
-# 👨‍💻 Author
-
-Siddique  
-
-GitHub:  
-
-https://github.com/merajsiddieque
-
----
-
-# ⭐ Support
-
-If you like this project, please give it a ⭐ on GitHub
+## 👨‍💻 Author
+**Meraj Alam**
+- GitHub: https://github.com/merajsiddieque
+- LinkedIn: https://www.linkedin.com/in/merajsiddieque

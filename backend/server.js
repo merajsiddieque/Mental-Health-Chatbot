@@ -5,23 +5,33 @@ import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
 
-dotenv.config(); // Load .env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from backend directory, fallback to current working directory
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Initialize OpenAI using .env key
-if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY not found in environment!");
-  process.exit(1);
+// ✅ Helper to get OpenAI client
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || apiKey === "your_openai_api_key_here") {
+    return null;
+  }
+  return new OpenAI({ apiKey });
+};
+
+let openai = getOpenAIClient();
+if (openai) {
+  console.log("✅ OpenAI initialized using environment variable");
+} else {
+  console.warn("⚠️ OPENAI_API_KEY not found in environment or .env file!");
+  console.warn("   Add OPENAI_API_KEY to your .env file or Render Dashboard -> Environment Variables.");
 }
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-console.log("✅ OpenAI initialized using .env key");
 
 // ✅ Health Check
 app.get("/api", (req, res) => {
@@ -37,7 +47,15 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      return res.status(500).json({
+        error: "OPENAI_API_KEY is not configured.",
+        details: "Please set OPENAI_API_KEY in your .env file or Render Dashboard environment variables.",
+      });
+    }
+
+    const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -71,9 +89,6 @@ Avoid robotic or formal tone.`,
 });
 
 // ✅ Serve React frontend (for Render)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 app.use(express.static(path.join(__dirname, "../react/dist")));
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "../react/dist/index.html"));

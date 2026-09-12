@@ -19,9 +19,9 @@ services:
         value: production
       - key: PORT
         value: 5000
-      # Example: add your own keys if needed
-      # - key: OPENAI_API_KEY
-      #   sync: false
+      # OpenAI API Key configured via Render Dashboard Environment Variables
+      - key: OPENAI_API_KEY
+        sync: false
 
   # === Frontend (React + Vite) ===
   - type: web

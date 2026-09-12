@@ -72,7 +72,8 @@ export default function SignInput({ onReply }) {
             `User performed gesture: ${topGesture}`;
 
           // Non-blocking backend call
-          fetch("http://localhost:5000/chat", {
+          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+          fetch(`${apiUrl}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: interpreted }),
