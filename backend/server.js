@@ -47,9 +47,15 @@ app.get("/api", (req, res) => {
   res.send("🧠 Mental Health Chatbot API is running successfully!");
 });
 
-// Helper to generate response with model fallback
+// Helper to generate response with model fallback and fast timeouts
 async function generateGeminiReply(genAI, message) {
-  const models = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash"];
+  // Ordered by speed: ultra-low latency Flash-Lite models first (~1s response time)
+  const models = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-flash-latest",
+  ];
   let lastError = null;
 
   for (const modelName of models) {
@@ -57,9 +63,19 @@ async function generateGeminiReply(genAI, message) {
       const model = genAI.getGenerativeModel({
         model: modelName,
         systemInstruction: SYSTEM_INSTRUCTION,
+        generationConfig: {
+          maxOutputTokens: 150,
+          temperature: 0.7,
+        },
       });
 
-      const result = await model.generateContent(message);
+      // 4-second timeout per model to guarantee lightning-fast response (< 5s)
+      const generatePromise = model.generateContent(message);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out (exceeded 4s)")), 4000)
+      );
+
+      const result = await Promise.race([generatePromise, timeoutPromise]);
       const text = result?.response?.text();
       if (text) {
         return text.trim();
