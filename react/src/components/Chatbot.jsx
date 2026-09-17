@@ -260,13 +260,15 @@ export default function Chatbot() {
       }
     } catch (e) {
       console.error("Error sending or saving message:", e);
+      const isConfigError = e.message?.includes("GOOGLE_API_KEY");
       setMessages((prev) => [
         ...prev,
         {
           id: uuidv4(),
           sender: "bot",
-          message:
-            "I'm having trouble connecting right now. Please check your connection or try again in a moment.",
+          message: isConfigError
+            ? "⚠️ GOOGLE_API_KEY is missing on Render. Please add GOOGLE_API_KEY in your Render Dashboard -> Environment Variables."
+            : "I'm having trouble connecting right now. Please check your connection or try again in a moment.",
           timestamp: new Date(),
         },
       ]);

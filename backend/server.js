@@ -44,7 +44,13 @@ if (googleApiKey) {
 
 // ✅ Health Check
 app.get("/api", (req, res) => {
-  res.send("🧠 Mental Health Chatbot API is running successfully!");
+  const key = getGoogleApiKey();
+  res.json({
+    status: "online",
+    message: "🧠 Mental Health Chatbot API is running successfully!",
+    googleApiKeyConfigured: Boolean(key),
+    model: "gemini-3.5-flash-lite",
+  });
 });
 
 // Helper to generate response with model fallback and fast timeouts
@@ -129,4 +135,7 @@ app.get(/.*/, (req, res) => {
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+  console.log(`🔑 Google Gemini API key: ${getGoogleApiKey() ? "CONFIGURED" : "MISSING (Set GOOGLE_API_KEY in Render environment variables)"}`);
+});
