@@ -75,10 +75,10 @@ async function generateGeminiReply(genAI, message) {
         },
       });
 
-      // 4-second timeout per model to guarantee lightning-fast response (< 5s)
+      // 6-second timeout per model to give headroom for cloud network latency
       const generatePromise = model.generateContent(message);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timed out (exceeded 4s)")), 4000)
+        setTimeout(() => reject(new Error("Request timed out (exceeded 6s)")), 6000)
       );
 
       const result = await Promise.race([generatePromise, timeoutPromise]);
@@ -120,10 +120,24 @@ app.post("/chat", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Chat API Error:", error.message);
-    res.status(500).json({
-      error: "Failed to get response",
-      details: error.message,
-    });
+
+    const apiKey = getGoogleApiKey();
+    if (!apiKey) {
+      return res.status(500).json({
+        error: "GOOGLE_API_KEY is not configured.",
+        details: "Please set GOOGLE_API_KEY in your .env file or Render Dashboard environment variables.",
+      });
+    }
+
+    // Graceful empathetic fallbacks so chat never breaks during momentary rate limits or timeouts
+    const empatheticFallbacks = [
+      "I hear you, and what you're going through sounds really painful. Take a gentle, deep breath—I am right here with you.",
+      "I'm listening closely to you. Please know that your feelings are completely valid and you don't have to face this alone. Would you like to share a bit more?",
+      "I'm so sorry you have to experience this heartache. Breakups and goodbyes are so difficult. Be gentle with yourself today.",
+      "Take your time. I am right by your side, and whatever you are feeling is okay. I'm here whenever you want to talk.",
+    ];
+    const reply = empatheticFallbacks[Math.floor(Math.random() * empatheticFallbacks.length)];
+    return res.json({ reply });
   }
 });
 

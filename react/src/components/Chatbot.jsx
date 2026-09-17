@@ -236,27 +236,31 @@ export default function Chatbot() {
 
       setMessages((prev) => [...prev, botMsgObj]);
 
-      // Save to Firestore if logged in
+      // Save to Firestore if logged in (isolated so DB errors don't affect chat display)
       if (userEmail) {
-        const messagesRef = collection(
-          db,
-          "Chats",
-          userEmail,
-          "chatList",
-          currentChatId,
-          "messages"
-        );
+        try {
+          const messagesRef = collection(
+            db,
+            "Chats",
+            userEmail,
+            "chatList",
+            currentChatId,
+            "messages"
+          );
 
-        await addDoc(messagesRef, {
-          sender: "user",
-          message: textToSend,
-          timestamp: serverTimestamp(),
-        });
-        await addDoc(messagesRef, {
-          sender: "bot",
-          message: botReply,
-          timestamp: serverTimestamp(),
-        });
+          await addDoc(messagesRef, {
+            sender: "user",
+            message: textToSend,
+            timestamp: serverTimestamp(),
+          });
+          await addDoc(messagesRef, {
+            sender: "bot",
+            message: botReply,
+            timestamp: serverTimestamp(),
+          });
+        } catch (dbErr) {
+          console.warn("⚠️ Error saving message to Firestore:", dbErr);
+        }
       }
     } catch (e) {
       console.error("Error sending or saving message:", e);
